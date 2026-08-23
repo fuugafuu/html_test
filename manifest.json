@@ -1,0 +1,9 @@
+{
+  "name":"PIXEL FORGE ARENA",
+  "short_name":"PIXEL FORGE",
+  "start_url":"/",
+  "display":"standalone",
+  "background_color":"#080b12",
+  "theme_color":"#080b12",
+  "description":"Draw, analyze and battle procedural pixel monsters without generative AI APIs."
+}
