@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
+  <meta name="theme-color" content="#050912" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>VECTOR FLIGHT LAB</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+      <div class="brand"><b>VECTOR</b> FLIGHT LAB <span>SAFE GAME SIM</span></div>
+      <div class="top-actions">
+        <button id="pauseBtn" class="btn ghost">PAUSE</button>
+        <button id="resetBtn" class="btn danger">RESET</button>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="sim-wrap">
+        <canvas id="sim" width="1280" height="720" aria-label="flight simulation"></canvas>
+        <div class="hud hud-left">
+          <div class="hud-title">PLAYER AIRCRAFT</div>
+          <div>SPD <b id="hudSpeed">0</b></div>
+          <div>ALT <b id="hudAlt">0</b></div>
+          <div>HDG <b id="hudHeading">000</b></div>
+          <div>FUEL <b id="hudFuel">100</b>%</div>
+          <div>MODE <b id="hudMode">MANUAL</b></div>
+        </div>
+        <div class="hud hud-right">
+          <div class="hud-title">TRACK</div>
+          <div>TGT <b id="hudTarget">---</b></div>
+          <div>RANGE <b id="hudRange">---</b></div>
+          <div>TGT SPD <b id="hudTargetSpeed">---</b></div>
+          <div>PROJECTILES <b id="hudMissiles">0</b></div>
+          <div>SIM <b id="hudTimeScale">1.0×</b></div>
+        </div>
+        <div class="center-reticle"><i></i><i></i><i></i><i></i></div>
+        <div id="notice" class="notice">SIM UNITS — REAL-WORLD WEAPON DATA IS NOT USED</div>
+        <div class="mobile-controls">
+          <div id="stickZone" class="stick-zone"><div id="stickKnob" class="stick-knob"></div></div>
+          <div class="mobile-buttons">
+            <button id="mobileAuto" class="round auto">AUTO</button>
+            <button id="mobileLaunch" class="round launch">TRACK</button>
+          </div>
+        </div>
+      </section>
+
+      <aside class="panel">
+        <div class="tabs">
+          <button class="tab active" data-tab="scenario">SCENARIO</button>
+          <button class="tab" data-tab="aircraft">AIRCRAFT</button>
+          <button class="tab" data-tab="target">TARGET</button>
+          <button class="tab" data-tab="tracker">TRACKER</button>
+          <button class="tab" data-tab="telemetry">DATA</button>
+        </div>
+
+        <section class="tabpane active" id="tab-scenario">
+          <h2>SCENARIO</h2>
+          <p class="sub">すべて架空のゲーム用パラメータです。</p>
+          <div class="scenario-grid">
+            <button data-scenario="headon">HEAD-ON</button>
+            <button data-scenario="cross">CROSSING</button>
+            <button data-scenario="chase">CHASE</button>
+            <button data-scenario="orbit">ORBIT</button>
+            <button data-scenario="evasive">EVASIVE</button>
+            <button data-scenario="swarm">MULTI</button>
+          </div>
+          <label class="control">時間倍率
+            <select id="timeScale">
+              <option value="0.25">0.25×</option><option value="0.5">0.5×</option><option selected value="1">1×</option><option value="2">2×</option><option value="4">4×</option>
+            </select>
+          </label>
+          <label class="toggle"><input id="showTrails" type="checkbox" checked> 軌跡を表示</label>
+          <label class="toggle"><input id="showPrediction" type="checkbox" checked> 予測位置を表示</label>
+          <label class="toggle"><input id="showVectors" type="checkbox"> 速度ベクトルを表示</label>
+          <div class="legend">
+            <span><i class="dot player"></i>PLAYER</span><span><i class="dot target"></i>TARGET</span><span><i class="dot missile"></i>TRACKER</span>
+          </div>
+        </section>
+
+        <section class="tabpane" id="tab-aircraft">
+          <h2>AIRCRAFT / AUTOPILOT</h2>
+          <label class="control">オートパイロット
+            <select id="apMode">
+              <option value="manual">MANUAL</option>
+              <option value="heading">HEADING HOLD</option>
+              <option value="altitude">ALT + HEADING</option>
+              <option value="waypoint">WAYPOINT NAV</option>
+              <option value="orbit">ORBIT NAV</option>
+            </select>
+          </label>
+          <label class="control">目標方位 <output id="headingOut">090°</output><input id="apHeading" type="range" min="0" max="359" value="90"></label>
+          <label class="control">目標高度 <output id="altOut">450</output><input id="apAltitude" type="range" min="50" max="950" value="450"></label>
+          <label class="control">スロットル <output id="throttleOut">72%</output><input id="throttle" type="range" min="0" max="100" value="72"></label>
+          <label class="control">機体旋回性能 <output id="turnOut">55</output><input id="airTurn" type="range" min="15" max="100" value="55"></label>
+          <label class="control">燃料搭載量 <output id="airFuelOut">100%</output><input id="airFuel" type="range" min="20" max="100" value="100"></label>
+          <button id="setWaypoint" class="btn wide">画面中央をWAYPOINTに設定</button>
+        </section>
+
+        <section class="tabpane" id="tab-target">
+          <h2>TARGET CONFIG</h2>
+          <label class="control">標的タイプ
+            <select id="targetType">
+              <option value="fighter">FAST JET</option>
+              <option value="bomber">HEAVY AIRCRAFT</option>
+              <option value="drone">LIGHT DRONE</option>
+              <option value="transport">TRANSPORT</option>
+              <option value="balloon">SLOW PLATFORM</option>
+            </select>
+          </label>
+          <label class="control">標的挙動
+            <select id="targetBehavior">
+              <option value="straight">STRAIGHT</option>
+              <option value="cross">CROSSING</option>
+              <option value="orbit">ORBIT</option>
+              <option value="zigzag">ZIGZAG</option>
+              <option value="evade">EVASIVE</option>
+              <option value="waypoints">WAYPOINTS</option>
+            </select>
+          </label>
+          <label class="control">標的速度 <output id="targetSpeedOut">92</output><input id="targetSpeed" type="range" min="15" max="160" value="92"></label>
+          <label class="control">旋回性能 <output id="targetTurnOut">58</output><input id="targetTurn" type="range" min="5" max="100" value="58"></label>
+          <label class="control">高度 <output id="targetAltOut">520</output><input id="targetAlt" type="range" min="50" max="950" value="520"></label>
+          <label class="control">標的数 <output id="targetCountOut">1</output><input id="targetCount" type="range" min="1" max="8" value="1"></label>
+          <button id="applyTargets" class="btn wide">標的を再生成</button>
+        </section>
+
+        <section class="tabpane" id="tab-tracker">
+          <h2>PREDICTIVE TRACKER</h2>
+          <p class="sub">現実の誘導則ではなく、ゲーム用の予測追尾です。</p>
+          <label class="control">追尾弾速度 <output id="missileSpeedOut">180</output><input id="missileSpeed" type="range" min="80" max="280" value="180"></label>
+          <label class="control">燃料量 <output id="missileFuelOut">14.0</output><input id="missileFuel" type="range" min="5" max="30" value="14" step="0.5"></label>
+          <label class="control">旋回能力 <output id="missileTurnOut">72</output><input id="missileTurn" type="range" min="20" max="100" value="72"></label>
+          <label class="control">予測の強さ <output id="predictionOut">55%</output><input id="prediction" type="range" min="0" max="100" value="55"></label>
+          <label class="control">推力 <output id="trackerThrottleOut">90%</output><input id="trackerThrottle" type="range" min="25" max="100" value="90"></label>
+          <label class="toggle"><input id="steeringFuel" type="checkbox" checked> 強い旋回でも燃料を消費</label>
+          <button id="launchBtn" class="btn launch wide">選択標的へ追尾弾を発射</button>
+          <div class="fuel-help">燃料切れ後は推力OFF。速度は抗力で徐々に低下し、慣性で飛行を続けます。</div>
+        </section>
+
+        <section class="tabpane" id="tab-telemetry">
+          <h2>LIVE TELEMETRY</h2>
+          <div class="telemetry" id="telemetry"></div>
+          <canvas id="graph" width="480" height="180"></canvas>
+          <button id="clearTelemetry" class="btn ghost wide">ログをクリア</button>
+        </section>
+      </aside>
+    </main>
+  </div>
+  <script src="./app.js"></script>
+</body>
+</html>
